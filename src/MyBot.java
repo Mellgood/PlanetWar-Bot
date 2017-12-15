@@ -1,34 +1,20 @@
 import java.util.*;
 
-class PlanetFleetComparator implements Comparator<Planet> {
-    @Override
-    public int compare(Planet a, Planet b) {
-        int res;
-        if(a.NumShips() == b.NumShips()){
-            res =0;
-        }else {
-            res = a.NumShips() >= b.NumShips() ? 1 : -1 ;
-        }
-        return res;
-    }
-}
+
 
 public class MyBot {
     
     
-    public static List<Planet> orderPlanets(List<Planet> planets) throws Exception{
-        if (planets == null) return null;
-        planets.sort(new PlanetFleetComparator());
-        return planets;
-    }
     
     
-    public static void DoTurn(PlanetWars pw) {
+    
+    public static void DoTurn_old(PlanetWars pw){
+        
         List<Planet> myPlanetList = pw.MyPlanets();
         List<Planet> notMyPlanetList = pw.NotMyPlanets();
         
-        myPlanetList.sort(new PlanetFleetComparator()); //at 0 i have my strongest planet
-        notMyPlanetList.sort(new PlanetFleetComparator()); //at 0 i have the not-mine weakest planet
+        myPlanetList.sort(new PlanetFleetSimpleComparator()); //at 0 i have my strongest planet
+        notMyPlanetList.sort(new PlanetFleetSimpleComparator()); //at 0 i have the not-mine weakest planet
         
         while(!myPlanetList.isEmpty() && !notMyPlanetList.isEmpty()){ //i want to cycle on all available planets
             Planet srcPlanet = myPlanetList.get(0);
@@ -67,6 +53,27 @@ public class MyBot {
         //return;
 	//pw.IssueOrder(source, dest, numShips);
 	
+        
+    }
+    
+    
+    public static void DoTurn(PlanetWars pw) {
+        DoTurn_old(pw);
+        
+        List<Planet> myPlanetList = pw.MyPlanets();
+        List<Planet> notMyPlanetList = pw.NotMyPlanets();
+        
+        myPlanetList.sort(new PlanetFleetSimpleComparator()); //at 0 i have my strongest planet
+        notMyPlanetList.sort(new PlanetFleetSimpleComparator()); //at 0 i have the not-mine weakest planet
+        
+        //every planet can play autonomous its game, but it can not attack the same planet attacked by a strongest planet
+        for (Planet p : myPlanetList){
+            //every planet has its own parameter to be set on the dynamic comparator
+            notMyPlanetList.sort(new PlanetFleetDynamicComparator(pw, p));
+            
+        }
+        
+        
 
     }
 
