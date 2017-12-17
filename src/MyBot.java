@@ -57,8 +57,10 @@ public class MyBot {
     }
     
     
+    
+    
     public static void DoTurn(PlanetWars pw) {
-        DoTurn_old(pw);
+        //DoTurn_old(pw);
         
         List<Planet> myPlanetList = pw.MyPlanets();
         List<Planet> notMyPlanetList = pw.NotMyPlanets();
@@ -67,9 +69,43 @@ public class MyBot {
         notMyPlanetList.sort(new PlanetFleetSimpleComparator()); //at 0 i have the not-mine weakest planet
         
         //every planet can play autonomous its game, but it can not attack the same planet attacked by a strongest planet
-        for (Planet p : myPlanetList){
+        for (Planet myPlanet : myPlanetList){
             //every planet has its own parameter to be set on the dynamic comparator
-            notMyPlanetList.sort(new PlanetFleetDynamicComparator(pw, p));
+            //notMyPlanetList.sort(new PlanetFleetDynamicComparator(pw, p));
+            for(Fleet fleet : pw.EnemyFleets()){
+                //If I'm in range to counter the attack..
+                if (fleet.TurnsRemaining() > pw.Distance(myPlanet.PlanetID(), fleet.DestinationPlanet())){
+                    Planet destination = pw.GetPlanet(fleet.DestinationPlanet());
+                    //if I have more ships than the destination planet
+                    if (myPlanet.NumShips() > destination.NumShips()){
+                        //If enemy are attempting to attack me
+                        if (destination.Owner() == 1){
+                            int myShipsAtArrival = destination.NumShips() + (destination.GrowthRate() * fleet.TurnsRemaining());
+                            int enemyShipsAtArrival = 0;
+                            for(Fleet myFleet : pw.MyFleets()){
+                                if (myFleet.DestinationPlanet() == destination.PlanetID()){
+                                    myShipsAtArrival += myFleet.NumShips();
+                                }
+                            }
+                            for(Fleet enemyFleet : pw.EnemyFleets()){
+                                if(enemyFleet.DestinationPlanet() == destination.PlanetID()){
+                                    enemyShipsAtArrival += enemyFleet.NumShips();
+                                }
+                            }
+                            if (enemyShipsAtArrival > myShipsAtArrival){
+                                pw.IssueOrder(myPlanet, destination, enemyShipsAtArrival - myShipsAtArrival);
+                            }
+                            
+                            
+                        }else  //if the enemy Is trying to attack a neutral planet
+                            if(pw.GetPlanet(fleet.DestinationPlanet()).Owner() == 0){
+                                pw.IssueOrder(myPlanet.PlanetID(), fleet.DestinationPlanet(), 7);
+                            }
+                        
+                    }
+                    
+                }
+            }
             
         }
         
