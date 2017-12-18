@@ -106,9 +106,11 @@ public class MyBot {
                                 }
                                 //System.err.println("Command 1 source,dest,ships,availableships: " + myPlanet.PlanetID() + " " + destination.PlanetID() + " " + requiredShips + " " + myPlanet.NumShips());
                                 
-                                if(myPlanet.PlanetID() !=0 && destination.PlanetID() != 0 && requiredShips > 0 && !(firstEnemyComingIn == 10000) && firstEnemyComingIn > pw.Distance(myPlanet.PlanetID(), destination.PlanetID())){
+                                if(myPlanet.PlanetID() != destination.PlanetID() && myPlanet.PlanetID() !=0 && destination.PlanetID() != 0 && requiredShips > 0 && !(firstEnemyComingIn == 10000) && firstEnemyComingIn > pw.Distance(myPlanet.PlanetID(), destination.PlanetID())){
                                     System.err.println("Command 1 source,dest,ships,availableships: " + myPlanet.PlanetID() + " " + destination.PlanetID() + " " + requiredShips + " " + myPlanet.NumShips());
                                     pw.IssueOrder(myPlanet, destination, requiredShips);
+                                    pw.MyFleets().add(new Fleet(1, requiredShips, myPlanet.PlanetID(), destination.PlanetID(), pw.Distance(myPlanet.PlanetID(), destination.PlanetID()), pw.Distance(myPlanet.PlanetID(), destination.PlanetID())));
+                                    
                                     
                                 }
                                 
@@ -149,6 +151,7 @@ public class MyBot {
                                         if(myPlanet.NumShips() > ( 1+sheepsNeeded)){
                                             System.err.println("Command 2 (source dest numsheeps mysheeps) " + myPlanet.PlanetID() + " " + fleet.DestinationPlanet() + " " + sheepsNeeded + " " + myPlanet.NumShips() );
                                             pw.IssueOrder(myPlanet.PlanetID(), fleet.DestinationPlanet(), sheepsNeeded);
+                                            pw.MyFleets().add(new Fleet(1, sheepsNeeded, myPlanet.PlanetID(), destination.PlanetID(), pw.Distance(myPlanet.PlanetID(), destination.PlanetID()), pw.Distance(myPlanet.PlanetID(), destination.PlanetID())));
                                         }
                                     }
                                 }
@@ -161,9 +164,44 @@ public class MyBot {
             
         }
         
+        //_______________________________________________________
+        //ATTACK PHASE
+        //_______________________________________________________
+        
+        //List<Planet> myPlanetList = pw.MyPlanets();
+        //List<Planet> notMyPlanetList = pw.NotMyPlanets();
+        
+        myPlanetList.sort(new PlanetFleetSimpleComparator()); //at 0 i have my strongest planet
+        notMyPlanetList.sort(new PlanetFleetSimpleComparator()); //at 0 i have the not-mine weakest planet
+        
+        
+        
+//        for(Planet source : myPlanetList){
+//            Planet dest = notMyPlanetList.get(0);
+//            boolean isAttackable = true;
+//            int destShips = 1+ dest.NumShips();
+//            //se è del nemico, aggiungo il growth rate
+//            if(dest.Owner() == 2){
+//                destShips += dest.GrowthRate() * pw.Distance(source.PlanetID(), dest.PlanetID());
+//            }
+//            for (Fleet enemyFleet : pw.EnemyFleets()){
+//                //se sono sotto attacco, è la difesa a gestire la cosa.It's not my business :P
+//                //se il pianeta è già attaccato da un nemico, non mi interessa attaccarlo (la difesa escogiterà un piano per prevenire l'espansione nemica in zone vicine)
+//                if (enemyFleet.DestinationPlanet() == dest.PlanetID() || enemyFleet.DestinationPlanet() == source.PlanetID()){
+//                    isAttackable = false;
+//                }
+//            }            
+//            
+//            if (isAttackable && source.NumShips() > destShips){
+//                System.err.println("Command ATTACK!! source,dest,destShips,available: " + source + " " + dest + " " + destShips + " " + source.NumShips());
+//                pw.IssueOrder(source, dest, destShips);
+//            }
+//        }
+        
         
 
     }
+    
 
     public static void main(String[] args) {
 	String line = "";
