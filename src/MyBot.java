@@ -8,56 +8,6 @@ public class MyBot {
     
     
     
-    public static void DoTurn_old(PlanetWars pw){
-        
-        List<Planet> myPlanetList = pw.MyPlanets();
-        List<Planet> notMyPlanetList = pw.NotMyPlanets();
-        
-        myPlanetList.sort(new PlanetFleetSimpleComparator()); //at 0 i have my strongest planet
-        notMyPlanetList.sort(new PlanetFleetSimpleComparator()); //at 0 i have the not-mine weakest planet
-        
-        while(!myPlanetList.isEmpty() && !notMyPlanetList.isEmpty()){ //i want to cycle on all available planets
-            Planet srcPlanet = myPlanetList.get(0);
-            myPlanetList.remove(srcPlanet); // i do not need it no more on the list
-            
-            Planet destPlanet = notMyPlanetList.get(0); //notMyPlanetList.size() -1 );
-            notMyPlanetList.remove(destPlanet);
-            
-            if (srcPlanet.NumShips() > destPlanet.NumShips()){
-                int numOfShipsToSend = destPlanet.NumShips();
-                numOfShipsToSend ++;
-                //int numOfReinforcementsComing = 0; //fleets going to dest planet
-                
-                //finding a good number of ships to send
-                for(Fleet f : pw.EnemyFleets()){
-                    if(f.DestinationPlanet() == destPlanet.PlanetID()){ //they are going to the selected destination planet
-                        numOfShipsToSend += f.NumShips(); //mandare altra flotta per correggere il n
-                        //fare lista di pianeti "attivi" ovvero di interesse. questi pianeti devono essere monitorati ogni turno
-                        //e comprendono i miei pianeti e i pianeti che sto attaccando.
-                        //se trovo flotte verso i pianeti attivi, devo reagire di conseguenza, prima dell'arrivo delle flotte (se il nemico le ha
-                        //mandate allora è probabile che ha le sue ragioni e devo difendermi)
-                    }                    
-                }
-                
-                if(numOfShipsToSend < srcPlanet.NumShips()){ //ho abbastanza navi e le mando
-                    pw.IssueOrder(srcPlanet, destPlanet, numOfShipsToSend );
-                }else{ //ho bisogno di piu navi
-                    int shipsAvailable = srcPlanet.NumShips() -1;
-                    numOfShipsToSend += - shipsAvailable; //sending all ships minus one
-                    pw.IssueOrder(srcPlanet, destPlanet, shipsAvailable);
-                }
-                
-            }
-        }
-        
-        //return;
-	//pw.IssueOrder(source, dest, numShips);
-	
-        
-    }
-    
-    
-    
     
     public static void DoTurn(PlanetWars pw) {
         //DoTurn_old(pw);
@@ -107,9 +57,32 @@ public class MyBot {
                                 //System.err.println("Command 1 source,dest,ships,availableships: " + myPlanet.PlanetID() + " " + destination.PlanetID() + " " + requiredShips + " " + myPlanet.NumShips());
                                 
                                 if(myPlanet.PlanetID() != destination.PlanetID() && myPlanet.PlanetID() !=0 && destination.PlanetID() != 0 && requiredShips > 0 && !(firstEnemyComingIn == 10000) && firstEnemyComingIn > pw.Distance(myPlanet.PlanetID(), destination.PlanetID())){
-                                    System.err.println("Command 1 source,dest,ships,availableships: " + myPlanet.PlanetID() + " " + destination.PlanetID() + " " + requiredShips + " " + myPlanet.NumShips());
-                                    pw.IssueOrder(myPlanet, destination, requiredShips);
-                                    pw.MyFleets().add(new Fleet(1, requiredShips, myPlanet.PlanetID(), destination.PlanetID(), pw.Distance(myPlanet.PlanetID(), destination.PlanetID()), pw.Distance(myPlanet.PlanetID(), destination.PlanetID())));
+                                    System.err.println("Command DEF ALLIED PLANET source,dest,ships,availableships: " + myPlanet.PlanetID() + " " + destination.PlanetID() + " " + requiredShips + " " + myPlanet.NumShips());
+                                    boolean isUnderAttack = false;
+                                    for(Fleet f : pw.EnemyFleets()){
+                                        if (f.DestinationPlanet() == myPlanet.PlanetID()){
+                                            isUnderAttack = true;
+                                        }
+                                    }
+                                    
+                                    boolean yetReinforced = false;
+                                    for(Fleet f : pw.MyFleets()){
+                                        //System.err.println("BBB");
+                                        if(f.DestinationPlanet() == destination.PlanetID()){
+                                            yetReinforced = true;
+                                            //System.err.println("AAA");
+                                        }
+                                    }
+                                    
+                                    if(!isUnderAttack && !yetReinforced){
+                                        pw.IssueOrder(myPlanet, destination, requiredShips);
+                                        Fleet f1 = new Fleet(1, requiredShips, myPlanet.PlanetID(), destination.PlanetID(), pw.Distance(myPlanet.PlanetID(), destination.PlanetID()), pw.Distance(myPlanet.PlanetID(), destination.PlanetID()));
+                                        pw.addFleet(f1);
+                                        myPlanet.RemoveShips(requiredShips);
+                                        //System.err.println("--------------------SIZE: " + pw.MyFleets().size());
+                                        //break;
+                                    }
+                                    
                                     
                                     
                                 }
@@ -148,10 +121,20 @@ public class MyBot {
                                     System.err.println("my distance is: " + pw.Distance(myPlanet.PlanetID(), destination.PlanetID()));
                                     if(enemyFleetsToDestinationList.get(0).TurnsRemaining() == (-1 + pw.Distance(myPlanet.PlanetID(), destination.PlanetID()))){
                                         
-                                        if(myPlanet.NumShips() > ( 1+sheepsNeeded)){
-                                            System.err.println("Command 2 (source dest numsheeps mysheeps) " + myPlanet.PlanetID() + " " + fleet.DestinationPlanet() + " " + sheepsNeeded + " " + myPlanet.NumShips() );
+                                        boolean yetReinforced = false;
+                                        for(Fleet f : pw.MyFleets()){
+                                            //System.err.println("BBB");
+                                            if(f.DestinationPlanet() == destination.PlanetID()){
+                                                yetReinforced = true;
+                                                //System.err.println("AAA");
+                                            }
+                                        }
+                                        
+                                        if(!yetReinforced && myPlanet.NumShips() > ( 1+sheepsNeeded)){
+                                            System.err.println("Command DEF NEUTRAL PLANET (source dest numsheeps mysheeps) " + myPlanet.PlanetID() + " " + fleet.DestinationPlanet() + " " + sheepsNeeded + " " + myPlanet.NumShips() );
                                             pw.IssueOrder(myPlanet.PlanetID(), fleet.DestinationPlanet(), sheepsNeeded);
                                             pw.MyFleets().add(new Fleet(1, sheepsNeeded, myPlanet.PlanetID(), destination.PlanetID(), pw.Distance(myPlanet.PlanetID(), destination.PlanetID()), pw.Distance(myPlanet.PlanetID(), destination.PlanetID())));
+                                            myPlanet.RemoveShips(sheepsNeeded);
                                         }
                                     }
                                 }
@@ -173,6 +156,39 @@ public class MyBot {
         
         myPlanetList.sort(new PlanetFleetSimpleComparator()); //at 0 i have my strongest planet
         notMyPlanetList.sort(new PlanetFleetSimpleComparator()); //at 0 i have the not-mine weakest planet
+        
+        for (Planet source : myPlanetList){
+            int distance = 1000;
+            Planet destination = null;
+            int numShips = 0;
+            if (source.NumShips() > 20){
+                numShips = source.NumShips() /2;
+            }
+            
+            for(Planet dest : myPlanetList){
+                if (dest.GrowthRate() > source.GrowthRate()){
+                    if (pw.Distance(source.PlanetID(), dest.PlanetID()) < distance){
+                        distance = pw.Distance(source.PlanetID(), dest.PlanetID());
+                        destination = dest;
+                    }
+                }
+            }
+            
+            boolean underAttack = false;
+            for(Fleet f : pw.EnemyFleets()){
+                if (f.DestinationPlanet() == source.PlanetID()){
+                    underAttack = true;
+                }
+            }
+            
+            if (!underAttack && source != null && destination != null && source.PlanetID() != destination.PlanetID() && numShips != 0){
+                pw.IssueOrder(source, destination, distance);
+            }
+        }
+        
+        
+        
+        
         
         
         

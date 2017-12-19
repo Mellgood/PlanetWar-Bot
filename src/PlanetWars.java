@@ -54,6 +54,13 @@ public class PlanetWars {
 	}
 	return r;
     }
+    
+    public void addFleet(Fleet f){
+        this.fleets.add(f);
+    }
+    public void addShipsToPlanet(int planetID, int ships){
+        GetPlanet(planetID).AddShips(ships);
+    }
 
     // Return a list of all neutral planets.
     public List<Planet> NeutralPlanets() {
